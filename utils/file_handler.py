@@ -141,11 +141,15 @@ def validate_and_filter(transactions, region=None, min_amount=None, max_amount=N
         print(f"After amount filter: {len(filtered)} records")
 
     summary = {
-        'total_input': len(transactions),
-        'invalid': invalid_count,
-        'filtered_by_region': filtered_by_region,
-        'filtered_by_amount': filtered_by_amount,
-        'final_count': len(filtered)
-    }
+    'total_input': len(transactions),
+    'invalid': invalid_count,
+    'filtered_by_region': filtered_by_region,
+    'filtered_by_amount': filtered_by_amount,
+    'final_count': len(filtered),
+    'regions': sorted(regions),
+    'amount_min': min(amounts) if amounts else 0,
+    'amount_max': max(amounts) if amounts else 0
+}
+
 
     return filtered, invalid_count, summary
