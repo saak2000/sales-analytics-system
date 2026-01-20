@@ -21,6 +21,8 @@ from utils.api_handler import (
     save_enriched_data
 )
 
+from utils.report_generator import generate_sales_report
+
 import os
 
 
@@ -106,13 +108,13 @@ def main():
         # [5/10] Part 2 – Analysis
         print("\n[5/10] Analyzing sales data...")
 
-        total_revenue = calculate_total_revenue(valid_transactions)
-        region_analysis = region_wise_sales(valid_transactions)
-        top_products = top_selling_products(valid_transactions)
-        customers = customer_analysis(valid_transactions)
-        daily_trend = daily_sales_trend(valid_transactions)
-        peak_day = find_peak_sales_day(valid_transactions)
-        low_products = low_performing_products(valid_transactions)
+        calculate_total_revenue(valid_transactions)
+        region_wise_sales(valid_transactions)
+        top_selling_products(valid_transactions)
+        customer_analysis(valid_transactions)
+        daily_sales_trend(valid_transactions)
+        find_peak_sales_day(valid_transactions)
+        low_performing_products(valid_transactions)
 
         print("✓ Analysis complete")
 
@@ -121,34 +123,31 @@ def main():
         print("\n[6/10] Fetching product data from API...")
         api_products = fetch_all_products()
 
-        if not api_products:
-            print("✗ API data unavailable. Continuing without enrichment.")
-            return
+        # -------------------------------------------------
+        # [7/10 & 8/10] Enrichment (ONLY if API works)
+        if api_products:
+            product_mapping = create_product_mapping(api_products)
 
-        print(f"✓ Fetched {len(api_products)} products")
+            print("\n[7/10] Enriching sales data...")
+            enriched_transactions = enrich_sales_data(valid_transactions, product_mapping)
 
-        product_mapping = create_product_mapping(api_products)
+            matched_count = sum(1 for tx in enriched_transactions if tx.get('API_Match'))
+            percentage = (matched_count / len(enriched_transactions)) * 100
+
+            print(f"✓ Enriched {matched_count}/{len(enriched_transactions)} transactions "
+                  f"({percentage:.1f}%)")
+
+            print("\n[8/10] Saving enriched data...")
+            save_enriched_data(enriched_transactions)
+
+        else:
+            print("✗ API data unavailable. Skipping enrichment step.")
+            enriched_transactions = []
 
         # -------------------------------------------------
-        # [7/10] Enrich sales data
-        print("\n[7/10] Enriching sales data...")
-        enriched_transactions = enrich_sales_data(valid_transactions, product_mapping)
-
-        matched_count = sum(1 for tx in enriched_transactions if tx.get('API_Match'))
-        percentage = (matched_count / len(enriched_transactions)) * 100
-
-        print(f"✓ Enriched {matched_count}/{len(enriched_transactions)} transactions "
-              f"({percentage:.1f}%)")
-
-        # -------------------------------------------------
-        # [8/10] Save enriched data
-        print("\n[8/10] Saving enriched data...")
-        save_enriched_data(enriched_transactions)
-
-        # -------------------------------------------------
-        # [9/10] Generate report (Part 4 placeholder)
+        # [9/10] Part 4 – Generate report
         print("\n[9/10] Generating report...")
-        print("✓ (Report generation will be implemented in Part 4)")
+        generate_sales_report(valid_transactions, enriched_transactions)
 
         # -------------------------------------------------
         print("\n[10/10] Process Complete!")
